@@ -29,7 +29,7 @@ $time = microtime(true);
 foreach ($arr as $item) {
     $a = $item;
 }
-echo 'foreach: ' . round(microtime(true) - $time, 3) . '<br/>';
+echo 'foreach-time: ' . round(microtime(true) - $time, 3) . '<br/>';
 
 $time = microtime(true);
 $obj = new ArrayObject($arr);
@@ -39,6 +39,6 @@ while ($it->valid()) {
     $it->next();
 }
 
-echo 'spl: ' . round(microtime(true) - $time, 5);
+echo 'spl-time: ' . round(microtime(true) - $time, 5);
 
 // У меня foreach оказался быстрее на всех объемах данных)
