@@ -1,44 +1,71 @@
 <?php
-echo '1. Написать аналог «Проводника» в Windows для директорий на сервере при помощи итераторов.<br/>';
+echo 'Получить число шагов для заданного алгоритма.<br/>
+Вычислить сложность алгоритма.<br/>';
 
-echo '<a href="..">..</a><br/>';
+$prices = [
+    [
+        'price' => 21999,
+        'shop_name' => 'Shop 1',
+        'shop_link' => 'http://'
+    ],
+    [
+        'price' => 21550,
+        'shop_name' => 'Shop 2',
+        'shop_link' => 'http://'
+    ],
+    [
+        'price' => 21950,
+        'shop_name' => 'Shop 2',
+        'shop_link' => 'http://'
+    ],
+    [
+        'price' => 21350,
+        'shop_name' => 'Shop 2',
+        'shop_link' => 'http://'
+    ],
+    [
+        'price' => 21050,
+        'shop_name' => 'Shop 2',
+        'shop_link' => 'http://'
+    ]
+];
 
-$request = $_REQUEST['link'] ?: './';
-$dir = new DirectoryIterator($request);
+function ShellSort($elements) {
+    $totalSteps = 0;
 
-foreach ($dir as $item) {
-    if ($item->isDot()) {
-        continue;
+    $pass=0;
+    $gap[0] = (int) (count($elements) / 2);
+    while($gap[$pass] > 1) {
+        $pass++;
+        $gap[$pass]= (int)($gap[$pass-1] / 2);
     }
-    if ($item->isDir()) {
-        echo '<a href=".?link=' . $item->getFilename() . '">' . $item->getFilename() . '</a><br/>';
-    } else {
-        echo $item->getFilename() . '<br/>';
+
+    for($i = 0; $i <= $pass; $i++){
+        $step = $gap[$i];
+
+        $totalSteps++;
+
+        for($j = $step; $j < count($elements); $j++) {
+            $temp = $elements[$j];
+            $p = $j - $step;
+
+            $totalSteps++;
+
+            while($p >= 0 && $temp['price'] < $elements[$p]['price']) {
+                $elements[$p + $step] = $elements[$p];
+                $p = $p - $step;
+
+                $totalSteps++;
+            }
+
+            $elements[$p + $step] = $temp;
+        }
     }
+
+    echo '<br/>Количество шагов: ' . $totalSteps;
+
+    return $elements;
 }
 
-
-echo '<hr/>2. Попробовать определить, на каком объеме данных применение итераторов становится выгоднее, чем использование чистого foreach.<br/>';
-
-$arr = [];
-for ($i = 0; $i < 1000000; $i++) {
-    $arr[$i] = $i;
-}
-
-$time = microtime(true);
-foreach ($arr as $item) {
-    $a = $item;
-}
-echo 'foreach: ' . round(microtime(true) - $time, 3) . '<br/>';
-
-$time = microtime(true);
-$obj = new ArrayObject($arr);
-$it = $obj->getIterator();
-while ($it->valid()) {
-    $a = $it->current();
-    $it->next();
-}
-
-echo 'spl: ' . round(microtime(true) - $time, 5);
-
-// У меня foreach оказался быстрее на всех объемах данных)
+echo '<br/>Сложность алгоритма: O(n^2)';
+var_dump(ShellSort($prices));
