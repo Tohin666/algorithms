@@ -128,3 +128,17 @@ echo joinClosureTable($closureTableCategories, $closureTableLinks);
 
 
 echo '2. Дано слово, состоящее только из строчных латинских букв. Проверить, является ли оно палиндромом. При решении этой задачи нельзя пользоваться циклами<br/>';
+
+function checkPalindrome($word) {
+    $first = substr($word, 0, 1);
+    $last = substr($word, -1, 1);
+    if ($first == $last ) {
+        if (strlen($word) > 3) {
+            return checkPalindrome(substr($word, 1, strlen($word) - 2));
+        }
+        return 'true';
+    }
+    return 'false';
+}
+
+echo checkPalindrome('level');
