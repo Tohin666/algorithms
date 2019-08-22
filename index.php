@@ -1,44 +1,144 @@
 <?php
-echo '1. Написать аналог «Проводника» в Windows для директорий на сервере при помощи итераторов.<br/>';
+echo '1. Реализовать вывод меню на основе Closure table.<br/>';
 
-echo '<a href="..">..</a><br/>';
+$closureTableCategories = [
+    [
+        'id_category' => 1,
+        'category_name' => 'Каталог'
+    ],
+    [
+        'id_category' => 2,
+        'category_name' => 'Одежда'
+    ],
+    [
+        'id_category' => 3,
+        'category_name' => 'Продукты'
+    ],
+    [
+        'id_category' => 4,
+        'category_name' => 'Верхняя одежда'
+    ],
+    [
+        'id_category' => 5,
+        'category_name' => 'Молочные продукты'
+    ],
+];
+$closureTableLinks = [
+    [
+        'parent_id' => 1,
+        'child_id' => 1,
+        'level' => 0
+    ],
+    [
+        'parent_id' => 1,
+        'child_id' => 2,
+        'level' => 1
+    ],
+    [
+        'parent_id' => 1,
+        'child_id' => 3,
+        'level' => 1
+    ],
+    [
+        'parent_id' => 2,
+        'child_id' => 4,
+        'level' => 2
+    ],
+    [
+        'parent_id' => 3,
+        'child_id' => 5,
+        'level' => 2
+    ],
+    [
+        'parent_id' => 2,
+        'child_id' => 2,
+        'level' => 1
+    ],
+    [
+        'parent_id' => 4,
+        'child_id' => 4,
+        'level' => 2
+    ],
+    [
+        'parent_id' => 3,
+        'child_id' => 3,
+        'level' => 1
+    ],
+    [
+        'parent_id' => 5,
+        'child_id' => 5,
+        'level' => 2
+    ],
+];
 
-$request = $_REQUEST['link'] ?: './';
-$dir = new DirectoryIterator($request);
-
-foreach ($dir as $item) {
-    if ($item->isDot()) {
-        continue;
+function buildTree($categories, $categoryLevel = 0)
+{
+    $html = "<ul>";
+    foreach ($categories[$categoryLevel] as $item) {
+        $html .= "<li>" . $item["name"];
+        if (isset($categories[$item["id"]])) {
+            $html .= "<ul>";
+            $html .= buildTree($categories, $item["id"]);
+            $html .= "</ul>";
+        }
+        $html .= "</li>";
     }
-    if ($item->isDir()) {
-        echo '<a href=".?link=' . $item->getFilename() . '">' . $item->getFilename() . '</a><br/>';
-    } else {
-        echo $item->getFilename() . '<br/>';
+    $html .= "</ul>";
+    return $html;
+}
+
+function joinClosureTable($closureTableCategories, $closureTableLinks)
+{
+    $joinedClosureTable = [];
+    foreach ($closureTableLinks as $closureTableLink) {
+        $categoryName = '';
+        if ($closureTableLink['child_id'] == 1) {
+            foreach ($closureTableCategories as $closureTableCategory) {
+                if ($closureTableCategory['id_category'] == $closureTableLink['child_id']) {
+                    $categoryName = $closureTableCategory['category_name'];
+                    break;
+                }
+            }
+            $joinedClosureTable[0][] = [
+                'id' => $closureTableLink['child_id'],
+                'name' => $categoryName,
+                'pid' => 0,
+            ];
+        } else if ($closureTableLink['child_id'] != $closureTableLink['parent_id']) {
+            if (!isset($closureTableLink['parent_id'])) {
+                $joinedClosureTable[] = $closureTableLink['parent_id'];
+            }
+            foreach ($closureTableCategories as $closureTableCategory) {
+                if ($closureTableCategory['id_category'] == $closureTableLink['child_id']) {
+                    $categoryName = $closureTableCategory['category_name'];
+                    break;
+                }
+            }
+            $joinedClosureTable[$closureTableLink['parent_id']][] = [
+                'id' => $closureTableLink['child_id'],
+                'name' => $categoryName,
+                'pid' => $closureTableLink['parent_id'],
+            ];
+        }
     }
+    return buildTree($joinedClosureTable);
 }
 
+echo joinClosureTable($closureTableCategories, $closureTableLinks);
 
-echo '<hr/>2. Попробовать определить, на каком объеме данных применение итераторов становится выгоднее, чем использование чистого foreach.<br/>';
 
-$arr = [];
-for ($i = 0; $i < 1000000; $i++) {
-    $arr[$i] = $i;
+echo '2. Дано слово, состоящее только из строчных латинских букв. Проверить, является ли оно палиндромом. При решении этой задачи нельзя пользоваться циклами<br/>';
+
+function checkPalindrome($word) {
+    $first = substr($word, 0, 1);
+    $last = substr($word, -1, 1);
+    if ($first == $last ) {
+        if (strlen($word) > 3) {
+            return checkPalindrome(substr($word, 1, strlen($word) - 2));
+        }
+        return 'true';
+    }
+    return 'false';
 }
 
-$time = microtime(true);
-foreach ($arr as $item) {
-    $a = $item;
-}
-echo 'foreach: ' . round(microtime(true) - $time, 3) . '<br/>';
-
-$time = microtime(true);
-$obj = new ArrayObject($arr);
-$it = $obj->getIterator();
-while ($it->valid()) {
-    $a = $it->current();
-    $it->next();
-}
-
-echo 'spl: ' . round(microtime(true) - $time, 5);
-
-// У меня foreach оказался быстрее на всех объемах данных)
+echo checkPalindrome('level');
