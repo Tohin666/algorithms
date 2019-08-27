@@ -1,44 +1,121 @@
 <?php
-echo '1. Написать аналог «Проводника» в Windows для директорий на сервере при помощи итераторов.<br/>';
+echo 'Реализовать построение и обход дерева для математического выражения.<br/>';
 
-echo '<a href="..">..</a><br/>';
 
-$request = $_REQUEST['link'] ?: './';
-$dir = new DirectoryIterator($request);
+class MathExpressionNode
+{
+    public $value;
+    public $left;
+    public $right;
 
-foreach ($dir as $item) {
-    if ($item->isDot()) {
-        continue;
+    public function __construct($value = null)
+    {
+        $this->value = $value;
+        $this->left = null;
+        $this->right = null;
     }
-    if ($item->isDir()) {
-        echo '<a href=".?link=' . $item->getFilename() . '">' . $item->getFilename() . '</a><br/>';
-    } else {
-        echo $item->getFilename() . '<br/>';
+}
+
+
+class MathExpressionTree
+{
+    protected $root;
+    protected $expressionTree = null;
+
+    public function __construct($expression)
+    {
+        $this->root = null;
+        $this->buildExpressionTree($expression);
+    }
+
+    protected function buildExpressionTree($expression)
+    {
+        $expressionArr = str_split($expression);
+        foreach ($expressionArr as $item) {
+            if ($item == '(') {
+                $this->insertLeftParentheses($this->expressionTree);
+            } else if ($item != '+' && $item != '-' && $item != '*' && $item != '/' && $item != '^' && $item != ')') {
+                $this->insertOperand($item, $this->expressionTree);
+            } else if ($item == '+' || $item == '-' || $item == '*' || $item == '/' || $item != '^') {
+                $this->insertOperator($item, $this->expressionTree);
+            }
+        }
+    }
+
+    protected function insertLeftParentheses(&$subtree)
+    {
+        if ($subtree == null) {
+            $subtree = new MathExpressionNode;
+        } else if ($subtree->left == null) {
+            $subtree->left = new MathExpressionNode;
+        } else if (gettype($subtree->left) != 'object') {
+            if ($subtree->right == null) {
+                $subtree->right = new MathExpressionNode;
+            }
+        } else {
+            $this->insertLeftParentheses($subtree->left);
+        }
+    }
+
+    protected function insertOperand($value, &$subtree)
+    {
+        if ($subtree == null) {
+            $subtree = new MathExpressionNode;
+            $subtree->left = $value;
+        } else if ($subtree->left == null) {
+            $subtree->left = $value;
+        } else if (gettype($subtree->left) != 'object') {
+            if ($subtree->right == null) {
+                $subtree->right = $value;
+            } else if (gettype($subtree->right) == 'object') {
+                $this->insertOperand($value, $subtree->right);
+            }
+        } else {
+            $this->insertOperand($value, $subtree->left);
+        }
+    }
+
+    protected function insertOperator($value, &$subtree)
+    {
+        if (gettype($subtree->left) == 'object') {
+            $this->insertOperator($value, $subtree->left);
+        } else if ((int)$subtree->left && $subtree->value == null) {
+            $subtree->value = $value;
+        } else if (gettype($subtree->right) == 'object') {
+            $this->insertOperator($value, $subtree->right);
+        }
+    }
+
+    public function calculate(&$subtree = null)
+    {
+        if ($subtree == null) {
+            $subtree = $this->expressionTree;
+        }
+
+        if (gettype($subtree->left) == 'object') {
+            $subtree->left = $this->calculate($subtree->left);
+        }
+        if (gettype($subtree->right) == 'object') {
+            $subtree->right = $this->calculate($subtree->right);
+        }
+
+        $result = null;
+        if ($subtree->value == '+') {
+            $result = $subtree->left + $subtree->right;
+        }
+        if ($subtree->value == '-') {
+            $result = $subtree->left - $subtree->right;
+        }
+        if ($subtree->value == '*') {
+            $result = $subtree->left * $subtree->right;
+        }
+        if ($subtree->value == '/') {
+            $result = $subtree->left / $subtree->right;
+        }
+        return $result;
     }
 }
 
-
-echo '<hr/>2. Попробовать определить, на каком объеме данных применение итераторов становится выгоднее, чем использование чистого foreach.<br/>';
-
-$arr = [];
-for ($i = 0; $i < 1000000; $i++) {
-    $arr[$i] = $i;
-}
-
-$time = microtime(true);
-foreach ($arr as $item) {
-    $a = $item;
-}
-echo 'foreach: ' . round(microtime(true) - $time, 3) . '<br/>';
-
-$time = microtime(true);
-$obj = new ArrayObject($arr);
-$it = $obj->getIterator();
-while ($it->valid()) {
-    $a = $it->current();
-    $it->next();
-}
-
-echo 'spl: ' . round(microtime(true) - $time, 5);
-
-// У меня foreach оказался быстрее на всех объемах данных)
+$expression = '(3+(4*5))';
+$tree = new MathExpressionTree($expression);
+echo $expression . ' = ' . $tree->calculate();
